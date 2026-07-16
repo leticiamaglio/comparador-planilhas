@@ -90,15 +90,12 @@ st.divider()
 # Escolha das chaves
 # ===========================================
 
-chaves = escolher_chaves(df_a)
+chave_a, chave_b = escolher_chaves(
+    df_a,
+    df_b
+)
 
-if len(chaves) == 0:
-
-    st.warning(
-        "Selecione pelo menos uma coluna-chave."
-    )
-
-    st.stop()
+chaves = [chave_a]
 
 
 # ===========================================
@@ -130,7 +127,7 @@ if not valida_a:
 
 valida_b, duplicados_b = validar_chaves(
     df_b,
-    chaves
+    [chave_b]
 )
 
 if not valida_b:
@@ -146,14 +143,21 @@ if not valida_b:
     )
 
     df_b = df_b.drop_duplicates(
-        subset=chaves,
-        keep="first"
-    )
+    subset=[chave_b],
+    keep="first"
+)
 
 
 st.divider()
 
+if chave_a != chave_b:
 
+    df_b = df_b.rename(
+        columns={
+            chave_b: chave_a
+        }
+    )
+    
 # ===========================================
 # Mapeamento
 # ===========================================
