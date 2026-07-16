@@ -144,64 +144,194 @@ def mostrar_preview(df_a, df_b):
             height=300
         )
 
-
-def mostrar_dashboard(resultado):
+def mostrar_dashboard(
+    resultado,
+    chaves
+):
 
     st.subheader("📊 Resumo da Comparação")
 
     total = max(resultado.resumo.consolidado, 1)
 
     pct_consistentes = resultado.resumo.consistentes / total * 100
+    pct_inconsistentes = resultado.resumo.inconsistentes / total * 100
     pct_exclusivos_a = resultado.resumo.exclusivos_a / total * 100
     pct_exclusivos_b = resultado.resumo.exclusivos_b / total * 100
-    pct_inconsistentes = resultado.resumo.inconsistentes / total * 100
 
     st.caption(
         f"**Planilha A:** {resultado.resumo.nome_planilha_a} | "
         f"**Planilha B:** {resultado.resumo.nome_planilha_b}"
     )
 
-    c1, c2, c3 = st.columns(3)
+    st.caption(
+        f"**🔑 Chave utilizada:** {' + '.join(chaves)}"
+    )
+
+    st.divider()
+
+    c1, c2 = st.columns(2)
 
     with c1:
 
         st.metric(
             "🟢 Consistentes",
-            resultado.resumo.consistentes,
-            f"{pct_consistentes:.1f}%"
+            f"{resultado.resumo.consistentes} registros"
         )
 
+        st.progress(pct_consistentes / 100)
+
+        st.caption(f"{pct_consistentes:.1f}% do total")
+
         st.metric(
-            "🔵 Exclusivos A",
-            resultado.resumo.exclusivos_a,
-            f"{pct_exclusivos_a:.1f}%"
+            "🟡 Inconsistentes",
+            f"{resultado.resumo.inconsistentes} registros"
         )
+
+        st.progress(pct_inconsistentes / 100)
+
+        st.caption(f"{pct_inconsistentes:.1f}% do total")
 
     with c2:
 
         st.metric(
-            "🟣 Exclusivos B",
-            resultado.resumo.exclusivos_b,
-            f"{pct_exclusivos_b:.1f}%"
+            "🔵 Exclusivos da Planilha A",
+            f"{resultado.resumo.exclusivos_a} registros"
         )
+
+        st.progress(pct_exclusivos_a / 100)
+
+        st.caption(f"{pct_exclusivos_a:.1f}% do total")
 
         st.metric(
-            "🟡 Inconsistentes",
-            resultado.resumo.inconsistentes,
-            f"{pct_inconsistentes:.1f}%"
+            "🟣 Exclusivos da Planilha B",
+            f"{resultado.resumo.exclusivos_b} registros"
         )
 
-    with c3:
+        st.progress(pct_exclusivos_b / 100)
 
-        st.metric(
-            "⚪ Consolidado",
-            resultado.resumo.consolidado
-        )
+        st.caption(f"{pct_exclusivos_b:.1f}% do total")
 
-        st.success("✅ Comparação concluída")
+    st.metric(
+        "⚪ Total Consolidado",
+        f"{resultado.resumo.consolidado} registros"
+    )
+
+    st.success("✅ Comparação concluída com sucesso")
 
     st.divider()
+        # ==========================================================
+    # Resumo da Análise
+    # ==========================================================
 
+    st.subheader("📋 Resumo da Análise")
+
+    mensagens = []
+
+    if resultado.resumo.inconsistentes == 0:
+        mensagens.append(
+            "✅ Nenhuma inconsistência foi encontrada entre os registros comparados."
+        )
+    else:
+        mensagens.append(
+            f"⚠ Foram encontradas {resultado.resumo.inconsistentes} inconsistências que precisam ser analisadas."
+        )
+
+    if resultado.resumo.exclusivos_a > 0:
+        mensagens.append(
+            f"🔵 Existem {resultado.resumo.exclusivos_a} registros exclusivos na Planilha A."
+        )
+
+    if resultado.resumo.exclusivos_b > 0:
+        mensagens.append(
+            f"🟣 Existem {resultado.resumo.exclusivos_b} registros exclusivos na Planilha B."
+        )
+
+    mensagens.append(
+        f"⚪ O consolidado possui {resultado.resumo.consolidado} registros."
+    )
+
+    for mensagem in mensagens:
+        st.write(mensagem)
+
+    st.divider()
+        # ==========================================================
+    # Parecer da Comparação
+    # ==========================================================
+
+    st.subheader("📌 Parecer da Comparação")
+
+    if (
+        resultado.resumo.inconsistentes == 0
+        and resultado.resumo.exclusivos_a == 0
+        and resultado.resumo.exclusivos_b == 0
+    ):
+
+        st.success(
+            """
+As duas planilhas possuem exatamente os mesmos registros para a chave utilizada.
+
+Nenhuma inconsistência ou registro exclusivo foi encontrado.
+"""
+        )
+
+    elif resultado.resumo.inconsistentes == 0:
+
+        st.info(
+            f"""
+Não foram encontradas inconsistências entre os registros comparados.
+
+Foram identificados:
+
+• {resultado.resumo.exclusivos_a} registros exclusivos na Planilha A.
+
+• {resultado.resumo.exclusivos_b} registros exclusivos na Planilha B.
+
+Esse comportamento costuma ser esperado quando as planilhas representam períodos diferentes ou bases distintas.
+
+Consulte as abas **Exclusivos A** e **Exclusivos B** para analisar esses registros.
+"""
+        )
+
+    else:
+
+        percentual = (
+            resultado.resumo.inconsistentes
+            / total
+        ) * 100
+
+        if percentual < 10:
+
+            st.warning(
+                f"""
+Foram encontradas {resultado.resumo.inconsistentes} inconsistências.
+
+A quantidade de divergências é relativamente pequena, porém recomenda-se revisar a aba **Inconsistentes** antes da utilização dos dados.
+"""
+            )
+
+        elif percentual < 25:
+
+            st.warning(
+                f"""
+Foram encontradas {resultado.resumo.inconsistentes} inconsistências.
+
+A quantidade de divergências merece atenção.
+
+Recomenda-se revisar cuidadosamente a aba **Inconsistentes** antes de utilizar a base consolidada.
+"""
+            )
+
+        else:
+
+            st.error(
+                f"""
+Foram encontradas {resultado.resumo.inconsistentes} inconsistências.
+
+A proporção de divergências é elevada ({percentual:.1f}% dos registros).
+
+Recomenda-se revisar os critérios de comparação e validar os dados de origem antes de utilizar o resultado.
+"""
+            )
 
 def mostrar_resultados(resultado):
 

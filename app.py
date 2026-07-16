@@ -180,7 +180,10 @@ if botao_comparar():
 
     st.divider()
 
-    mostrar_dashboard(resultado)
+    mostrar_dashboard(
+    resultado,
+    chaves
+)
 
     mostrar_resultados(resultado)
 
