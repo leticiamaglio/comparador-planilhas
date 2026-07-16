@@ -35,7 +35,7 @@ def aplicar_estilo():
 def configurar_pagina():
 
     st.set_page_config(
-        page_title="Reconciliador Inteligente de Planilhas",
+page_title="Comparador de Planilhas",
         page_icon="📊",
         layout="wide"
     )
@@ -43,11 +43,11 @@ def configurar_pagina():
 
 def mostrar_titulo():
 
-    st.title("📊 Reconciliador Inteligente de Planilhas")
+    st.title("📊 Comparador de Planilhas")
 
     st.write(
-        "Compare duas planilhas e identifique automaticamente "
-        "registros consistentes, exclusivos e inconsistentes."
+    "Compare automaticamente duas planilhas com estruturas semelhantes, "
+    "identificando registros consistentes, inconsistentes, exclusivos e gerando um relatório consolidado."
     )
 
 

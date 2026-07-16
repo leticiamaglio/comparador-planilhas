@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# VS Code
+.vscode/
+
+# Arquivos temporários
+*.log
+
+# Excel temporário
+~$*.xlsx
