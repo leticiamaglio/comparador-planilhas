@@ -20,7 +20,7 @@ def aplicar_estilo():
     }
 
     .block-container{
-        padding-top:1rem;
+        padding-top:2rem;
         padding-bottom:2rem;
         padding-left:3rem;
         padding-right:3rem;
@@ -32,11 +32,11 @@ def aplicar_estilo():
 def configurar_pagina():
 
     st.set_page_config(
-        page_title="Comparador de Planilhas",
-        page_icon="📊",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
+    page_title="Comparador de Planilhas",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 
 def mostrar_titulo():
@@ -52,6 +52,7 @@ def mostrar_sidebar():
     with st.sidebar:
 
         st.title("📊 Comparador de Planilhas")
+        
 
         st.divider()
 
