@@ -390,6 +390,17 @@ def escrever_planilhas(
         resultado.consolidado
     )
 
+    extras = (
+        ("Duplicados A", "duplicados_a"),
+        ("Duplicados B", "duplicados_b"),
+        ("Sem chave A", "sem_chave_a"),
+        ("Sem chave B", "sem_chave_b"),
+    )
+
+    for nome_aba, atributo in extras:
+        if hasattr(resultado, atributo):
+            escrever_dataframe(writer, nome_aba, getattr(resultado, atributo))
+
 # ============================================================
 # GERAÇÃO DO EXCEL
 # ============================================================

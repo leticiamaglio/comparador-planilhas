@@ -137,6 +137,56 @@ Ferramenta desenvolvida para comparar duas planilhas, identificar divergências 
         st.caption("© 2026 • Comparador de Planilhas")
 
         
+def mostrar_sidebar_v2():
+    """Orientacoes da interface orientada a conceitos."""
+    with st.sidebar:
+        st.title("Plataforma de Reconciliacao")
+        st.divider()
+        with st.expander("Primeiros passos", expanded=True):
+            st.markdown("""
+1. Envie as planilhas A e B.
+2. Informe a linha em que o cabecalho inicia em cada arquivo.
+3. Em **Mapeamento de conceitos**, indique em qual coluna esta cada informacao.
+4. Se a informacao estiver dentro de um texto, escolha um extrator. Por exemplo, NF, fornecedor e valor podem ser extraidos de um nome de arquivo.
+5. Selecione os **conceitos-chave** que identificam um registro. Voce pode combinar conceitos, como Pedido + Item.
+6. Selecione os conceitos que devem ser comparados.
+7. Clique em **Comparar Planilhas**, revise as abas e exporte o relatorio.
+
+O sistema preserva o texto original, o valor padronizado e o status de cada extracao para auditoria.
+""")
+        with st.expander("Como interpretar os resultados", expanded=True):
+            st.markdown("""
+### Consistentes
+Registros encontrados nas duas planilhas, com os mesmos valores nos conceitos selecionados para comparacao.
+
+### Inconsistentes
+Registros encontrados nas duas planilhas com diferenca em um ou mais conceitos. A coluna **Motivo da Inconsistencia** identifica quais conceitos divergem.
+
+### Exclusivos A e B
+Registros com chave valida encontrados apenas em uma das planilhas.
+
+### Duplicados A e B
+Registros com a mesma chave mais de uma vez na mesma planilha. Eles nao sao descartados nem comparados automaticamente, pois a correspondencia seria ambigua.
+
+### Sem chave A e B
+Registros sem valor em pelo menos um conceito-chave. Revise a origem, o mapeamento ou o extrator antes de reconciliar novamente.
+
+### Consolidado
+Reune registros consistentes e exclusivos que puderam ser reconciliados com seguranca.
+
+### Auditoria da extracao
+Colunas iniciadas por `_raw_` guardam o texto original. Colunas `_status_` indicam se o valor foi lido diretamente, extraido, se houve falha ou ambiguidade.
+""")
+        with st.expander("Sobre"):
+            st.markdown("""
+**Plataforma de Reconciliacao de Planilhas**
+
+Versao **2.0.0**
+
+Compare planilhas de layouts diferentes usando conceitos de negocio, sem regras especificas por cliente.
+""")
+
+
 def upload_planilhas():
 
     st.subheader("📂 Upload das Planilhas")
@@ -420,6 +470,42 @@ def mostrar_resultados(resultado):
             resultado.consolidado,
             use_container_width=True
         )
+
+
+def mostrar_dashboard_v2(resultado, chaves):
+    """Resumo da reconciliação canônica, incluindo itens que exigem revisão."""
+    resumo = resultado.resumo
+    st.subheader("Resumo da reconciliação")
+    st.caption(f"**Planilha A:** {resumo.nome_planilha_a} | **Planilha B:** {resumo.nome_planilha_b}")
+    st.caption(f"**Conceitos-chave:** {' + '.join(chaves)}")
+    colunas = st.columns(4)
+    colunas[0].metric("Consistentes", resumo.consistentes)
+    colunas[1].metric("Inconsistentes", resumo.inconsistentes)
+    colunas[2].metric("Exclusivos A", resumo.exclusivos_a)
+    colunas[3].metric("Exclusivos B", resumo.exclusivos_b)
+    colunas = st.columns(3)
+    colunas[0].metric("Duplicidades A", resumo.duplicados_a)
+    colunas[1].metric("Duplicidades B", resumo.duplicados_b)
+    colunas[2].metric("Sem chave", resumo.sem_chave_a + resumo.sem_chave_b)
+    if resumo.duplicados_a or resumo.duplicados_b or resumo.sem_chave_a or resumo.sem_chave_b:
+        st.warning("Há registros que não foram reconciliados automaticamente. Consulte as abas de revisão.")
+    else:
+        st.success("Reconciliação concluída sem chaves duplicadas ou ausentes.")
+
+
+def mostrar_resultados_v2(resultado):
+    abas = st.tabs([
+        "Consistentes", "Inconsistentes", "Exclusivos A", "Exclusivos B",
+        "Duplicados A", "Duplicados B", "Sem chave A", "Sem chave B", "Consolidado",
+    ])
+    dados = [
+        resultado.consistentes, resultado.inconsistentes, resultado.exclusivos_a, resultado.exclusivos_b,
+        resultado.duplicados_a, resultado.duplicados_b, resultado.sem_chave_a, resultado.sem_chave_b,
+        resultado.consolidado,
+    ]
+    for aba, dataframe in zip(abas, dados):
+        with aba:
+            st.dataframe(dataframe, use_container_width=True)
 
 
 def botao_comparar():

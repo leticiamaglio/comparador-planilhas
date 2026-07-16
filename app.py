@@ -1,253 +1,67 @@
-from reconciliador.configuracoes import (
-    mostrar_opcoes
-)
-from reconciliador.interface import (
-    configurar_pagina,
-    aplicar_estilo,
-    mostrar_titulo,
-    mostrar_sidebar,
-    upload_planilhas,
-    mostrar_preview,
-    mostrar_dashboard,
-    mostrar_resultados,
-    botao_comparar,
-    botao_download
-)
-
-from reconciliador.leitor import (
-    ler_planilha
-)
-
-from reconciliador.chave import (
-    escolher_chaves,
-    validar_chaves,
-    montar_mapeamento
-)
-
-from reconciliador.comparador import (
-    Comparador
-)
-
-from reconciliador.exportador import (
-    gerar_excel
-)
-
 import streamlit as st
 
+from reconciliador.exportador import gerar_excel
+from reconciliador.interface import (
+    aplicar_estilo,
+    botao_comparar,
+    botao_download,
+    configurar_pagina,
+    mostrar_dashboard_v2,
+    mostrar_preview,
+    mostrar_resultados_v2,
+    mostrar_sidebar_v2,
+    mostrar_titulo,
+    upload_planilhas,
+)
+from reconciliador.leitor import ler_planilha
+from reconciliador.v2 import CATALOGO_PADRAO, Padronizador
+from reconciliador.v2.extratores import EXTRATORES_PADRAO
+from reconciliador.v2.interface import mostrar_mapeamento_conceitos
+from reconciliador.v2.reconciliador import Reconciliador
 
-# ===========================================
-# Configuração
-# ===========================================
 
 configurar_pagina()
 aplicar_estilo()
-
 mostrar_titulo()
-mostrar_sidebar()
-
-
-# ===========================================
-# Upload
-# ===========================================
+mostrar_sidebar_v2()
 
 arquivo_a, arquivo_b = upload_planilhas()
-
 if arquivo_a is None or arquivo_b is None:
     st.stop()
 
-# ===========================================
-# Configuração da leitura
-# ===========================================
-
-st.subheader("⚙️ Configuração da leitura")
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    cabecalho_a = st.number_input(
-        "Cabeçalho da Planilha A começa na linha:",
-        min_value=1,
-        value=1,
-        step=1
-    )
-
-with col2:
-
-    cabecalho_b = st.number_input(
-        "Cabeçalho da Planilha B começa na linha:",
-        min_value=1,
-        value=1,
-        step=1
-    )
-
-# ===========================================
-# Leitura
-# ===========================================
+st.subheader("Configuração da leitura")
+coluna_a, coluna_b = st.columns(2)
+with coluna_a:
+    cabecalho_a = st.number_input("Cabeçalho da Planilha A começa na linha", min_value=1, value=1, step=1)
+with coluna_b:
+    cabecalho_b = st.number_input("Cabeçalho da Planilha B começa na linha", min_value=1, value=1, step=1)
 
 try:
-
-    df_a = ler_planilha(
-        arquivo_a,
-        cabecalho=cabecalho_a - 1
-    )
-
-    df_b = ler_planilha(
-        arquivo_b,
-        cabecalho=cabecalho_b - 1
-    )
-
+    dados_a = ler_planilha(arquivo_a, cabecalho=cabecalho_a - 1)
+    dados_b = ler_planilha(arquivo_b, cabecalho=cabecalho_b - 1)
 except Exception as erro:
-
-    st.error("❌ Não foi possível abrir uma das planilhas.")
-
+    st.error("Não foi possível abrir uma das planilhas.")
     st.exception(erro)
-
     st.stop()
 
-# ===========================================
-# Pré-visualização
-# ===========================================
-
-mostrar_preview(
-    df_a,
-    df_b
-)
-
+mostrar_preview(dados_a, dados_b)
 st.divider()
-
-
-# ===========================================
-# Escolha das chaves
-# ===========================================
-
-chave_a, chave_b = escolher_chaves(
-    df_a,
-    df_b
-)
-
-chaves = [chave_a]
-
-
-# ===========================================
-# Validação das chaves
-# ===========================================
-
-valida_a, duplicados_a = validar_chaves(
-    df_a,
-    chaves
-)
-
-if not valida_a:
-
-    st.warning(
-        f"⚠️ Foram encontrados {len(duplicados_a)} registros duplicados na Planilha A. "
-        "Eles serão desconsiderados da comparação."
-    )
-
-    st.dataframe(
-        duplicados_a,
-        use_container_width=True
-    )
-
-    df_a = df_a.drop_duplicates(
-        subset=chaves,
-        keep="first"
-    )
-
-
-valida_b, duplicados_b = validar_chaves(
-    df_b,
-    [chave_b]
-)
-
-if not valida_b:
-
-    st.warning(
-        f"⚠️ Foram encontrados {len(duplicados_b)} registros duplicados na Planilha B. "
-        "Eles serão desconsiderados da comparação."
-    )
-
-    st.dataframe(
-        duplicados_b,
-        use_container_width=True
-    )
-
-    df_b = df_b.drop_duplicates(
-    subset=[chave_b],
-    keep="first"
-)
-
-
+config_a, config_b, especificacao = mostrar_mapeamento_conceitos(dados_a, dados_b, CATALOGO_PADRAO)
 st.divider()
-
-if chave_a != chave_b:
-
-    df_b = df_b.rename(
-        columns={
-            chave_b: chave_a
-        }
-    )
-
-# ===========================================
-# Mapeamento
-# ===========================================
-
-mapeamento = montar_mapeamento(
-    df_a,
-    df_b,
-    chaves
-)
-
-st.divider()
-
-# ===========================================
-# Opções Avançadas
-# ===========================================
-
-opcoes = mostrar_opcoes()
-
-# ===========================================
-# Comparação
-# ===========================================
 
 if botao_comparar():
-
-    comparador = Comparador(
-
-    df_a=df_a,
-
-    df_b=df_b,
-
-    chaves=chaves,
-
-    mapeamento=mapeamento,
-
-    nome_planilha_a=arquivo_a.name,
-
-    nome_planilha_b=arquivo_b.name,
-
-    opcoes=opcoes
-
-)
-
-    resultado = comparador.executar()
+    try:
+        padronizador = Padronizador(CATALOGO_PADRAO, EXTRATORES_PADRAO)
+        resultado_a = padronizador.executar(dados_a, config_a)
+        resultado_b = padronizador.executar(dados_b, config_b)
+        for aviso in resultado_a.avisos + resultado_b.avisos:
+            st.warning(aviso)
+        resultado = Reconciliador().executar(resultado_a.dados, resultado_b.dados, especificacao)
+    except ValueError as erro:
+        st.error(str(erro))
+        st.stop()
 
     st.divider()
-
-    mostrar_dashboard(
-    resultado,
-    chaves
-)
-
-    mostrar_resultados(resultado)
-
-    st.divider()
-
-    arquivo_excel = gerar_excel(
-        resultado
-    )
-
-    botao_download(
-        arquivo_excel
-    )
+    mostrar_dashboard_v2(resultado, list(especificacao.chaves))
+    mostrar_resultados_v2(resultado)
+    botao_download(gerar_excel(resultado))
