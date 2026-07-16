@@ -12,7 +12,10 @@ FORMATOS_SUPORTADOS = (
 )
 
 
-def ler_planilha(arquivo):
+def ler_planilha(
+    arquivo,
+    cabecalho=0
+):
 
     nome = arquivo.name.lower()
 
@@ -23,7 +26,11 @@ def ler_planilha(arquivo):
             # tenta UTF-8 e, se falhar, Latin-1
 
             try:
-                df = pd.read_csv(arquivo, encoding="utf-8")
+                df = pd.read_csv(
+                    arquivo,
+                    encoding="utf-8",
+                    header=cabecalho
+)
 
             except UnicodeDecodeError:
 
@@ -31,22 +38,25 @@ def ler_planilha(arquivo):
 
                 df = pd.read_csv(
                     arquivo,
-                    encoding="latin1"
-                )
+                    encoding="latin1",
+                    header=cabecalho
+)
 
         elif nome.endswith(".xlsx"):
 
             df = pd.read_excel(
                 arquivo,
-                engine="openpyxl"
-            )
+                engine="openpyxl",
+                header=cabecalho
+)
 
         elif nome.endswith(".xls"):
 
             df = pd.read_excel(
                 arquivo,
-                engine="xlrd"
-            )
+                engine="xlrd",
+                header=cabecalho
+)
 
         else:
 

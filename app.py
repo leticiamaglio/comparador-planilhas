@@ -55,6 +55,31 @@ arquivo_a, arquivo_b = upload_planilhas()
 if arquivo_a is None or arquivo_b is None:
     st.stop()
 
+# ===========================================
+# Configuração da leitura
+# ===========================================
+
+st.subheader("⚙️ Configuração da leitura")
+
+col1, col2 = st.columns(2)
+
+with col1:
+
+    cabecalho_a = st.number_input(
+        "Cabeçalho da Planilha A começa na linha:",
+        min_value=1,
+        value=1,
+        step=1
+    )
+
+with col2:
+
+    cabecalho_b = st.number_input(
+        "Cabeçalho da Planilha B começa na linha:",
+        min_value=1,
+        value=1,
+        step=1
+    )
 
 # ===========================================
 # Leitura
@@ -62,8 +87,15 @@ if arquivo_a is None or arquivo_b is None:
 
 try:
 
-    df_a = ler_planilha(arquivo_a)
-    df_b = ler_planilha(arquivo_b)
+    df_a = ler_planilha(
+        arquivo_a,
+        cabecalho=cabecalho_a - 1
+    )
+
+    df_b = ler_planilha(
+        arquivo_b,
+        cabecalho=cabecalho_b - 1
+    )
 
 except Exception as erro:
 
@@ -72,7 +104,6 @@ except Exception as erro:
     st.exception(erro)
 
     st.stop()
-
 
 # ===========================================
 # Pré-visualização
@@ -157,7 +188,7 @@ if chave_a != chave_b:
             chave_b: chave_a
         }
     )
-    
+
 # ===========================================
 # Mapeamento
 # ===========================================
