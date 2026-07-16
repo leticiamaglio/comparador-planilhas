@@ -50,7 +50,50 @@ def mostrar_titulo():
     "identificando registros consistentes, inconsistentes, exclusivos e gerando um relatório consolidado."
     )
 
+def mostrar_ajuda():
 
+    with st.expander("ℹ️ Como interpretar os resultados"):
+
+        st.markdown("""
+
+### 🟢 Consistentes
+
+Registros que aparecem nas duas planilhas e possuem exatamente os mesmos valores em todas as colunas comparadas.
+
+---
+
+### 🟡 Inconsistentes
+
+Registros que aparecem nas duas planilhas, mas apresentam diferenças em uma ou mais colunas comparadas.
+
+A coluna **Motivo da Inconsistência** informa quais campos possuem divergências.
+
+---
+
+### 🔵 Exclusivos da Planilha A
+
+Registros encontrados apenas na primeira planilha.
+
+---
+
+### 🟣 Exclusivos da Planilha B
+
+Registros encontrados apenas na segunda planilha.
+
+---
+
+### ⚪ Consolidado
+
+Reúne todos os registros das duas planilhas, eliminando duplicidades conforme a chave selecionada.
+
+---
+
+### 🔑 Coluna-chave
+
+É a coluna (ou conjunto de colunas) utilizada para identificar um registro de forma única entre as duas planilhas.
+
+""")
+        
 def upload_planilhas():
 
     st.subheader("📂 Upload das Planilhas")
