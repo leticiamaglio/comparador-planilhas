@@ -60,8 +60,18 @@ if arquivo_a is None or arquivo_b is None:
 # Leitura
 # ===========================================
 
-df_a = ler_planilha(arquivo_a)
-df_b = ler_planilha(arquivo_b)
+try:
+
+    df_a = ler_planilha(arquivo_a)
+    df_b = ler_planilha(arquivo_b)
+
+except Exception as erro:
+
+    st.error("❌ Não foi possível abrir uma das planilhas.")
+
+    st.exception(erro)
+
+    st.stop()
 
 
 # ===========================================

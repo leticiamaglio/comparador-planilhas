@@ -16,24 +16,56 @@ def ler_planilha(arquivo):
 
     nome = arquivo.name.lower()
 
-    if nome.endswith(".csv"):
+    try:
 
-        df = pd.read_csv(arquivo)
+        if nome.endswith(".csv"):
 
-    elif nome.endswith((".xlsx", ".xls")):
+            # tenta UTF-8 e, se falhar, Latin-1
 
-        df = pd.read_excel(arquivo)
+            try:
+                df = pd.read_csv(arquivo, encoding="utf-8")
 
-    else:
+            except UnicodeDecodeError:
+
+                arquivo.seek(0)
+
+                df = pd.read_csv(
+                    arquivo,
+                    encoding="latin1"
+                )
+
+        elif nome.endswith(".xlsx"):
+
+            df = pd.read_excel(
+                arquivo,
+                engine="openpyxl"
+            )
+
+        elif nome.endswith(".xls"):
+
+            df = pd.read_excel(
+                arquivo,
+                engine="xlrd"
+            )
+
+        else:
+
+            raise ValueError(
+                "Formato de arquivo não suportado."
+            )
+
+    except Exception as erro:
 
         raise ValueError(
-            "Formato de arquivo não suportado."
+
+            "Não foi possível abrir a planilha.\n\n"
+            "Verifique se o arquivo não está corrompido "
+            "e se possui uma extensão válida (.xlsx, .xls ou .csv).\n\n"
+            f"Detalhes: {erro}"
+
         )
 
-    df = limpar_dataframe(df)
-
-    return df
-
+    return limpar_dataframe(df)
 
 def limpar_dataframe(df):
 
