@@ -147,7 +147,19 @@ def mostrar_preview(df_a, df_b):
 
 def mostrar_dashboard(resultado):
 
-    st.subheader("📊 Dashboard")
+    st.subheader("📊 Resumo da Comparação")
+
+    total = max(resultado.resumo.consolidado, 1)
+
+    pct_consistentes = resultado.resumo.consistentes / total * 100
+    pct_exclusivos_a = resultado.resumo.exclusivos_a / total * 100
+    pct_exclusivos_b = resultado.resumo.exclusivos_b / total * 100
+    pct_inconsistentes = resultado.resumo.inconsistentes / total * 100
+
+    st.caption(
+        f"**Planilha A:** {resultado.resumo.nome_planilha_a} | "
+        f"**Planilha B:** {resultado.resumo.nome_planilha_b}"
+    )
 
     c1, c2, c3 = st.columns(3)
 
@@ -155,24 +167,28 @@ def mostrar_dashboard(resultado):
 
         st.metric(
             "🟢 Consistentes",
-            resultado.resumo.consistentes
+            resultado.resumo.consistentes,
+            f"{pct_consistentes:.1f}%"
         )
 
         st.metric(
             "🔵 Exclusivos A",
-            resultado.resumo.exclusivos_a
+            resultado.resumo.exclusivos_a,
+            f"{pct_exclusivos_a:.1f}%"
         )
 
     with c2:
 
         st.metric(
             "🟣 Exclusivos B",
-            resultado.resumo.exclusivos_b
+            resultado.resumo.exclusivos_b,
+            f"{pct_exclusivos_b:.1f}%"
         )
 
         st.metric(
             "🟡 Inconsistentes",
-            resultado.resumo.inconsistentes
+            resultado.resumo.inconsistentes,
+            f"{pct_inconsistentes:.1f}%"
         )
 
     with c3:
@@ -182,7 +198,9 @@ def mostrar_dashboard(resultado):
             resultado.resumo.consolidado
         )
 
-    st.markdown("---")
+        st.success("✅ Comparação concluída")
+
+    st.divider()
 
 
 def mostrar_resultados(resultado):
