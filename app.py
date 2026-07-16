@@ -2,7 +2,7 @@ from reconciliador.interface import (
     configurar_pagina,
     aplicar_estilo,
     mostrar_titulo,
-    mostrar_ajuda,
+    mostrar_sidebar,
     upload_planilhas,
     mostrar_preview,
     mostrar_dashboard,
@@ -40,7 +40,7 @@ configurar_pagina()
 aplicar_estilo()
 
 mostrar_titulo()
-mostrar_ajuda()
+mostrar_sidebar()
 
 
 # ===========================================

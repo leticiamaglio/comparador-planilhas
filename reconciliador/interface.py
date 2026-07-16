@@ -19,12 +19,8 @@ def aplicar_estilo():
         visibility:hidden;
     }
 
-    header{
-        visibility:hidden;
-    }
-
     .block-container{
-        padding-top:2rem;
+        padding-top:1rem;
         padding-bottom:2rem;
         padding-left:3rem;
         padding-right:3rem;
@@ -32,12 +28,14 @@ def aplicar_estilo():
 
     </style>
     """, unsafe_allow_html=True)
+
 def configurar_pagina():
 
     st.set_page_config(
-page_title="Comparador de Planilhas",
+        page_title="Comparador de Planilhas",
         page_icon="📊",
-        layout="wide"
+        layout="wide",
+        initial_sidebar_state="expanded"
     )
 
 
@@ -49,12 +47,43 @@ def mostrar_titulo():
     "Compare automaticamente duas planilhas com estruturas semelhantes, "
     "identificando registros consistentes, inconsistentes, exclusivos e gerando um relatório consolidado."
     )
+def mostrar_sidebar():
 
-def mostrar_ajuda():
+    with st.sidebar:
 
-    with st.expander("ℹ️ Como interpretar os resultados"):
+        st.title("📊 Comparador de Planilhas")
 
-        st.markdown("""
+        st.divider()
+
+        with st.expander("🚀 Primeiros Passos"):
+
+            st.markdown("""
+
+1. Faça o upload das duas planilhas.
+
+2. Escolha a(s) **coluna(s)-chave**.
+
+A coluna-chave é utilizada para localizar o mesmo registro nas duas planilhas.
+
+Ela deve identificar cada registro de forma única.
+
+Exemplos:
+
+- CPF
+- Código do Produto
+- Número da Nota Fiscal
+- Pedido + Item
+
+3. Confira o mapeamento das colunas.
+
+4. Clique em **Comparar Planilhas**.
+
+5. Analise os resultados e exporte o relatório em Excel.
+
+""")
+            
+        with st.expander("📊 Como interpretar os resultados"):
+            st.markdown("""
 
 ### 🟢 Consistentes
 
@@ -86,13 +115,26 @@ Registros encontrados apenas na segunda planilha.
 
 Reúne todos os registros das duas planilhas, eliminando duplicidades conforme a chave selecionada.
 
----
+""")
 
-### 🔑 Coluna-chave
+        with st.expander("ℹ️ Sobre"):
 
-É a coluna (ou conjunto de colunas) utilizada para identificar um registro de forma única entre as duas planilhas.
+            st.markdown("""
+
+**Comparador de Planilhas**
+
+Versão **1.1.0**
+
+Desenvolvido por **Letícia Maglio**
+
+Ferramenta desenvolvida para comparar duas planilhas, identificar divergências e gerar um relatório consolidado.
 
 """)
+
+        st.divider()
+
+        st.caption("© 2026 • Comparador de Planilhas")
+
         
 def upload_planilhas():
 
