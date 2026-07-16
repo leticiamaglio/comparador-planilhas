@@ -1,3 +1,6 @@
+from reconciliador.configuracoes import (
+    mostrar_opcoes
+)
 from reconciliador.interface import (
     configurar_pagina,
     aplicar_estilo,
@@ -153,6 +156,11 @@ mapeamento = montar_mapeamento(
 
 st.divider()
 
+# ===========================================
+# Opções Avançadas
+# ===========================================
+
+opcoes = mostrar_opcoes()
 
 # ===========================================
 # Comparação
@@ -162,19 +170,21 @@ if botao_comparar():
 
     comparador = Comparador(
 
-        df_a=df_a,
+    df_a=df_a,
 
-        df_b=df_b,
+    df_b=df_b,
 
-        chaves=chaves,
+    chaves=chaves,
 
-        mapeamento=mapeamento,
+    mapeamento=mapeamento,
 
-        nome_planilha_a=arquivo_a.name,
+    nome_planilha_a=arquivo_a.name,
 
-        nome_planilha_b=arquivo_b.name
+    nome_planilha_b=arquivo_b.name,
 
-    )
+    opcoes=opcoes
+
+)
 
     resultado = comparador.executar()
 

@@ -1,10 +1,12 @@
 """
 comparador.py
 
-Responsável pela reconciliação entre duas planilhas.
+Responsável pela comparação entre duas planilhas.
 """
 
 import pandas as pd
+
+from reconciliador.normalizacao import preparar_valor
 
 from reconciliador.modelos import (
     ResultadoComparacao,
@@ -21,7 +23,8 @@ class Comparador:
         chaves,
         mapeamento,
         nome_planilha_a,
-        nome_planilha_b
+        nome_planilha_b,
+        opcoes=None
     ):
 
         self.df_a = df_a.copy()
@@ -33,13 +36,34 @@ class Comparador:
         self.nome_planilha_a = nome_planilha_a
         self.nome_planilha_b = nome_planilha_b
 
-        self.consistentes = pd.DataFrame()
-        self.exclusivos_a = pd.DataFrame()
-        self.exclusivos_b = pd.DataFrame()
-        self.inconsistentes = pd.DataFrame()
-        self.consolidado = pd.DataFrame()
+        self.opcoes = opcoes or {
 
-    def _criar_indice(self, df):
+            "ignorar_maiusculas": True,
+            "ignorar_espacos": True,
+            "ignorar_acentos": True,
+
+            "vazios_iguais": True,
+
+            "normalizar_documentos": True,
+            "normalizar_telefones": True,
+            "normalizar_numeros": False,
+            "normalizar_datas": False
+
+        }
+
+        self.consistentes = pd.DataFrame()
+
+        self.inconsistentes = pd.DataFrame()
+
+        self.exclusivos_a = pd.DataFrame()
+
+        self.exclusivos_b = pd.DataFrame()
+
+        self.consolidado = pd.DataFrame()
+    def _criar_indice(
+        self,
+        df
+    ):
 
         return df.set_index(
             self.chaves,
@@ -48,8 +72,13 @@ class Comparador:
 
     def _localizar_exclusivos(self):
 
-        indice_a = self._criar_indice(self.df_a)
-        indice_b = self._criar_indice(self.df_b)
+        indice_a = self._criar_indice(
+            self.df_a
+        )
+
+        indice_b = self._criar_indice(
+            self.df_b
+        )
 
         chaves_a = set(indice_a.index)
         chaves_b = set(indice_b.index)
@@ -60,9 +89,13 @@ class Comparador:
         if exclusivos_a:
 
             self.exclusivos_a = (
+
                 indice_a
+
                 .loc[list(exclusivos_a)]
+
                 .reset_index(drop=True)
+
             )
 
         else:
@@ -74,9 +107,13 @@ class Comparador:
         if exclusivos_b:
 
             self.exclusivos_b = (
+
                 indice_b
+
                 .loc[list(exclusivos_b)]
+
                 .reset_index(drop=True)
+
             )
 
         else:
@@ -84,6 +121,40 @@ class Comparador:
             self.exclusivos_b = pd.DataFrame(
                 columns=self.df_b.columns
             )
+    def _comparar_registro(
+        self,
+        registro_a,
+        registro_b
+    ):
+        """
+        Compara dois registros e retorna
+        os campos diferentes.
+        """
+
+        campos_diferentes = []
+
+        for coluna_a, coluna_b in self.mapeamento.items():
+
+            if coluna_b == "Não comparar":
+                continue
+
+            valor_a = preparar_valor(
+                registro_a[coluna_a],
+                self.opcoes
+            )
+
+            valor_b = preparar_valor(
+                registro_b[coluna_b],
+                self.opcoes
+            )
+
+            if valor_a != valor_b:
+
+                campos_diferentes.append(coluna_a)
+
+        return campos_diferentes
+
+
     def _localizar_consistentes_e_inconsistentes(self):
 
         indice_a = self._criar_indice(self.df_a)
@@ -91,7 +162,8 @@ class Comparador:
 
         chaves_comuns = (
             set(indice_a.index)
-            .intersection(set(indice_b.index))
+            &
+            set(indice_b.index)
         )
 
         consistentes = []
@@ -108,69 +180,40 @@ class Comparador:
             if isinstance(registro_b, pd.DataFrame):
                 registro_b = registro_b.iloc[0]
 
-            campos_diferentes = []
+            campos_diferentes = self._comparar_registro(
+                registro_a,
+                registro_b
+            )
 
-            for coluna_a, coluna_b in self.mapeamento.items():
-
-                if coluna_b == "Não comparar":
-                    continue
-
-                valor_a = str(
-                    registro_a[coluna_a]
-                ).strip()
-
-                valor_b = str(
-                    registro_b[coluna_b]
-                ).strip()
-
-                if valor_a != valor_b:
-
-                    campos_diferentes.append(
-                        coluna_a
-                    )
-
-            if len(campos_diferentes) == 0:
+            if not campos_diferentes:
 
                 consistentes.append(
                     registro_a.to_dict()
                 )
 
-            else:
+                continue
 
-                motivo = "; ".join(
-                    campos_diferentes
-                )
+            motivo = "; ".join(campos_diferentes)
 
-                linha_a = registro_a.to_dict()
-                linha_b = registro_b.to_dict()
+            linha_a = registro_a.to_dict()
+            linha_b = registro_b.to_dict()
 
-                linha_a["Origem"] = "Planilha A"
-                linha_b["Origem"] = "Planilha B"
+            linha_a["Origem"] = "Planilha A"
+            linha_b["Origem"] = "Planilha B"
 
-                linha_a[
-                    "Motivo da Inconsistência"
-                ] = motivo
+            linha_a["Motivo da Inconsistência"] = motivo
+            linha_b["Motivo da Inconsistência"] = motivo
 
-                linha_b[
-                    "Motivo da Inconsistência"
-                ] = motivo
+            inconsistentes.append(linha_a)
+            inconsistentes.append(linha_b)
 
-                inconsistentes.append(
-                    linha_a
-                )
-
-                inconsistentes.append(
-                    linha_b
-                )
-
-        self.consistentes = pd.DataFrame(
-            consistentes
-        )
-
-        self.inconsistentes = pd.DataFrame(
-            inconsistentes
-        )
+        self.consistentes = pd.DataFrame(consistentes)
+        self.inconsistentes = pd.DataFrame(inconsistentes)
     def _gerar_consolidado(self):
+        """
+        Gera a planilha consolidada contendo
+        todos os registros sem duplicidades.
+        """
 
         tabelas = []
 
@@ -184,37 +227,54 @@ class Comparador:
             tabelas.append(self.exclusivos_b)
 
         if not self.inconsistentes.empty:
+
             tabelas.append(
+
                 self.inconsistentes.drop(
+
                     columns=[
                         "Origem",
                         "Motivo da Inconsistência"
                     ],
+
                     errors="ignore"
+
                 )
+
             )
 
-        if len(tabelas) == 0:
+        if not tabelas:
 
             self.consolidado = pd.DataFrame()
 
             return
 
         self.consolidado = (
+
             pd.concat(
+
                 tabelas,
+
                 ignore_index=True
+
             )
+
             .drop_duplicates()
+
             .reset_index(drop=True)
+
         )
-
     def executar(self):
+        """
+        Executa toda a comparação e retorna
+        um objeto ResultadoComparacao.
+        """
 
+        # Localiza registros
         self._localizar_exclusivos()
-
         self._localizar_consistentes_e_inconsistentes()
 
+        # Gera consolidado
         self._gerar_consolidado()
 
         resumo = ResumoComparacao(
@@ -227,13 +287,13 @@ class Comparador:
 
             consistentes=len(self.consistentes),
 
+            inconsistentes=(
+                len(self.inconsistentes) // 2
+            ),
+
             exclusivos_a=len(self.exclusivos_a),
 
             exclusivos_b=len(self.exclusivos_b),
-
-            inconsistentes=int(
-                len(self.inconsistentes) / 2
-            ),
 
             consolidado=len(self.consolidado)
 
@@ -245,11 +305,11 @@ class Comparador:
 
             consistentes=self.consistentes,
 
+            inconsistentes=self.inconsistentes,
+
             exclusivos_a=self.exclusivos_a,
 
             exclusivos_b=self.exclusivos_b,
-
-            inconsistentes=self.inconsistentes,
 
             consolidado=self.consolidado
 
