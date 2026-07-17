@@ -630,18 +630,24 @@ def mostrar_resultados_v2(resultado):
 
     abas = st.tabs([titulo for titulo, _ in abas_info])
 
-    for aba, (_, dataframe) in zip(abas, abas_info):
+    for aba, (titulo, dataframe) in zip(abas, abas_info):
         with aba:
+
+            st.write(f"### {titulo}")
 
             dataframe = dataframe.drop(
                 columns=["_chave_reconciliacao"],
                 errors="ignore",
             )
 
-            st.dataframe(
-                dataframe,
-                use_container_width=True,
-            )
+            try:
+                st.dataframe(
+                    dataframe,
+                    use_container_width=True,
+                )
+            except Exception as e:
+                st.error(e)
+                st.write(dataframe.dtypes)
 
 def botao_comparar():
 
