@@ -56,7 +56,29 @@ if botao_comparar():
         resultado_b = padronizador.executar(dados_b, config_b)
         for aviso in resultado_a.avisos + resultado_b.avisos:
             st.warning(aviso)
-        resultado = Reconciliador().executar(resultado_a.dados, resultado_b.dados, especificacao)
+
+        import pandas as pd
+
+        pendencias = pd.concat(
+            [
+                resultado_a.pendencias_extracao,
+                resultado_b.pendencias_extracao,
+            ],
+            ignore_index=True,
+        )
+
+        if not pendencias.empty:
+            st.subheader("🔍 Pendências de Extração")
+            st.dataframe(
+                pendencias,
+                use_container_width=True,
+            )
+
+        resultado = Reconciliador().executar(
+            resultado_a.dados,
+            resultado_b.dados,
+            especificacao
+        )
     except ValueError as erro:
         st.error(str(erro))
         st.stop()

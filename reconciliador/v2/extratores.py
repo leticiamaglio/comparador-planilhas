@@ -48,13 +48,54 @@ def _texto(valor: Any) -> str:
 
 def extrair_numero_nf(valor: Any) -> ResultadoExtracao:
     texto = _texto(valor)
-    padrao = r"\b(?:n\.?\s*f\.?|nota\s+fiscal)\s*(?:n[ºo.]?\s*)?(\d+)\b"
-    encontrados = re.findall(padrao, texto, flags=re.IGNORECASE)
+
+    padroes = [
+
+        # NF 12345
+        r"\bnf\s*([a-z0-9]+)\b",
+
+        # Nota Fiscal 12345
+        r"\bnota\s+fiscal\s*(?:n[ºo.]?\s*)?([a-z0-9]+)\b",
+
+        # FAT 617086
+        r"\bfat\s*([a-z0-9]+)\b",
+
+        # ND 12481487
+        r"\bnd\s*([a-z0-9]+)\b",
+
+    ]
+
+    encontrados = []
+
+    for padrao in padroes:
+        encontrados.extend(
+            re.findall(
+                padrao,
+                texto,
+                flags=re.IGNORECASE
+            )
+        )
+
+    encontrados = list(dict.fromkeys(encontrados))
+
     if len(encontrados) == 1:
-        return ResultadoExtracao(encontrados[0], "extraido")
+        return ResultadoExtracao(
+            encontrados[0],
+            "extraido"
+        )
+
     if len(encontrados) > 1:
-        return ResultadoExtracao(None, "ambigua_extracao", "Mais de uma NF encontrada.")
-    return ResultadoExtracao(None, "falha_extracao", "Número de NF não encontrado.")
+        return ResultadoExtracao(
+            None,
+            "ambigua_extracao",
+            f"Foram encontrados {len(encontrados)} possíveis números."
+        )
+
+    return ResultadoExtracao(
+        None,
+        "falha_extracao",
+        "Número da nota não encontrado."
+    )
 
 
 def extrair_valor_monetario(valor: Any) -> ResultadoExtracao:

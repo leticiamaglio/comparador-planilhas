@@ -55,5 +55,24 @@ class EspecificacaoReconciliacao:
 
 @dataclass
 class ResultadoPadronizacao:
+    """
+    Resultado produzido pelo Padronizador.
+
+    dados:
+        Dataset canônico utilizado pelo reconciliador.
+
+    avisos:
+        Resumo textual das ocorrências encontradas durante a padronização.
+
+    pendencias_extracao:
+        Registros em que algum conceito não pôde ser extraído
+        automaticamente ou foi considerado ambíguo.
+    """
+
     dados: pd.DataFrame
+
     avisos: list[str] = field(default_factory=list)
+
+    pendencias_extracao: pd.DataFrame = field(
+        default_factory=pd.DataFrame
+    )

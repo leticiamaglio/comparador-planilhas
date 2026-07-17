@@ -21,20 +21,60 @@ class Padronizador:
         saida["_origem"] = configuracao.nome_origem
         saida["_linha_origem"] = dados_origem.index + 1
         avisos: list[str] = []
+        pendencias = []
 
         for regra in configuracao.campos:
             conceito = self.catalogo.obter(regra.conceito_id)
             bruto = dados_origem[regra.coluna_origem]
             valores, status, mensagens = [], [], []
-            for valor in bruto:
+            for indice, valor in bruto.items():
                 if regra.extrator_id:
-                    resultado = self.extratores.extrair(regra.extrator_id, valor)
-                    valor_final, estado, mensagem = resultado.valor, resultado.status, resultado.mensagem
+
+                    resultado = self.extratores.extrair(
+                        regra.extrator_id,
+                        valor
+                    )
+                    
+                    valor_final = resultado.valor
+                    estado = resultado.status
+                    mensagem = resultado.mensagem
                 else:
-                    valor_final, estado, mensagem = valor, "direto", None
-                valores.append(normalizar(valor_final, conceito.tipo))
+
+                    valor_final = valor
+                    estado = "direto"
+                    mensagem = None
+
+                valor_normalizado = normalizar(
+                    valor_final,
+                    conceito.tipo
+                )
+
+                valores.append(valor_normalizado)
+
                 status.append(estado)
+
                 mensagens.append(mensagem)
+
+                if estado not in ("direto", "extraido"):
+
+                    pendencias.append({
+
+                        "Origem": configuracao.nome_origem,
+
+                        "Linha": indice + 1,
+
+                        "Conceito": conceito.nome,
+
+                        "Texto Original": valor,
+
+                        "Valor Extraído": valor_final,
+
+                        "Status": estado,
+
+                        "Mensagem": mensagem
+
+                })
+
             saida[conceito.id] = valores
             saida[f"_raw_{conceito.id}"] = bruto.values
             saida[f"_status_{conceito.id}"] = status
@@ -42,7 +82,15 @@ class Padronizador:
             falhas = sum(estado != "direto" and estado != "extraido" for estado in status)
             if falhas:
                 avisos.append(f"{conceito.nome}: {falhas} linha(s) sem extração confiável.")
-        return ResultadoPadronizacao(dados=saida.reset_index(drop=True), avisos=avisos)
+        return ResultadoPadronizacao(
+
+    dados=saida.reset_index(drop=True),
+
+    avisos=avisos,
+
+    pendencias_extracao=pd.DataFrame(pendencias)
+
+)
 
     def _validar(self, dados_origem: pd.DataFrame, configuracao: ConfiguracaoPadronizacao) -> None:
         ids = [campo.conceito_id for campo in configuracao.campos]
