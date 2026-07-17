@@ -69,7 +69,8 @@ if botao_comparar():
         st.stop()
 
     st.divider()
-mostrar_dashboard_v2(resultado)
+
+mostrar_dashboard_v2(resultado, list(especificacao.chaves))
 mostrar_resultados_v2(resultado)
 
 st.stop()
