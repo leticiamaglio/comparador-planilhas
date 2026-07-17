@@ -488,15 +488,38 @@ def mostrar_dashboard_v2(resultado, chaves):
     )
 
     colunas = st.columns(4)
-    colunas[0].metric("Consistentes", resumo.consistentes)
-    colunas[1].metric("Inconsistentes", resumo.inconsistentes)
-    colunas[2].metric("Exclusivos A", resumo.exclusivos_a)
-    colunas[3].metric("Exclusivos B", resumo.exclusivos_b)
 
-    colunas = st.columns(3)
-    colunas[0].metric("Duplicidades A", resumo.duplicados_a)
-    colunas[1].metric("Duplicidades B", resumo.duplicados_b)
-    colunas[2].metric("Sem chave", resumo.sem_chave_a + resumo.sem_chave_b)
+    colunas[0].metric(
+        "✅ Correspondências",
+        resumo.consistentes
+    )
+
+    colunas[1].metric(
+        "⚠️ Diferenças",
+        resumo.inconsistentes
+    )
+
+    colunas[2].metric(
+        "📄 Apenas na A",
+        resumo.exclusivos_a
+    )
+
+    colunas[3].metric(
+        "📄 Apenas na B",
+        resumo.exclusivos_b
+    )
+
+    colunas = st.columns(2)
+
+    colunas[0].metric(
+        "🔁 Duplicados",
+        resumo.duplicados_a + resumo.duplicados_b
+    )
+
+    colunas[1].metric(
+        "⚠️ Não comparados",
+        resumo.sem_chave_a + resumo.sem_chave_b
+    )
 
     pendencias = []
 
@@ -562,33 +585,63 @@ Verifique se:
         )
 
 def mostrar_resultados_v2(resultado):
-    abas = st.tabs([
-        "Consistentes",
-        "Inconsistentes",
-        "Exclusivos A",
-        "Exclusivos B",
-        "Duplicados A",
-        "Duplicados B",
-        "Sem chave A",
-        "Sem chave B",
-        "Consolidado",
-    ])
+    st.info("""
+**Como interpretar os resultados**
 
-    dados = [
-        resultado.consistentes,
-        resultado.inconsistentes,
-        resultado.exclusivos_a,
-        resultado.exclusivos_b,
-        resultado.duplicados_a,
-        resultado.duplicados_b,
-        resultado.sem_chave_a,
-        resultado.sem_chave_b,
-        resultado.consolidado,
-    ]
+✅ **Correspondências** → registros encontrados nas duas planilhas e considerados iguais.
 
-    for aba, dataframe in zip(abas, dados):
+⚠️ **Diferenças encontradas** → registros encontrados nas duas planilhas, mas com alguma informação diferente.
+
+📄 **Apenas na Planilha A/B** → registros existentes em apenas uma das planilhas.
+
+🔁 **Duplicados** → mais de um registro possui a mesma chave de comparação.
+
+⚠️ **Não comparados** → faltam informações necessárias para realizar a comparação.
+""")
+
+    abas_info = []
+
+    if not resultado.consistentes.empty:
+        abas_info.append(("✅ Correspondências", resultado.consistentes))
+
+    if not resultado.inconsistentes.empty:
+        abas_info.append(("⚠️ Diferenças encontradas", resultado.inconsistentes))
+
+    if not resultado.exclusivos_a.empty:
+        abas_info.append(("📄 Apenas na Planilha A", resultado.exclusivos_a))
+
+    if not resultado.exclusivos_b.empty:
+        abas_info.append(("📄 Apenas na Planilha B", resultado.exclusivos_b))
+
+    if not resultado.duplicados_a.empty:
+        abas_info.append(("🔁 Duplicados (Planilha A)", resultado.duplicados_a))
+
+    if not resultado.duplicados_b.empty:
+        abas_info.append(("🔁 Duplicados (Planilha B)", resultado.duplicados_b))
+
+    if not resultado.sem_chave_a.empty:
+        abas_info.append(("⚠️ Não comparados (Planilha A)", resultado.sem_chave_a))
+
+    if not resultado.sem_chave_b.empty:
+        abas_info.append(("⚠️ Não comparados (Planilha B)", resultado.sem_chave_b))
+
+    # Sempre mostra o relatório completo
+    abas_info.append(("📊 Relatório completo", resultado.consolidado))
+
+    abas = st.tabs([titulo for titulo, _ in abas_info])
+
+    for aba, (_, dataframe) in zip(abas, abas_info):
         with aba:
-            st.dataframe(dataframe, use_container_width=True)
+
+            dataframe = dataframe.drop(
+                columns=["_chave_reconciliacao"],
+                errors="ignore",
+            )
+
+            st.dataframe(
+                dataframe,
+                use_container_width=True,
+            )
 
 def botao_comparar():
 

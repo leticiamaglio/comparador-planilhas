@@ -154,6 +154,57 @@ def formatar_tabela(ws):
     aplicar_filtro(ws)
 
     ajustar_colunas(ws)
+def nome_bonito(nome):
+    nome = nome.replace("_", " ")
+
+    ajustes = {
+        "numero nf": "Número NF",
+        "cnpj": "CNPJ",
+        "cpf": "CPF",
+        "id": "ID",
+        "nf": "NF",
+    }
+
+    return ajustes.get(nome.lower(), nome.title())
+
+
+def renomear_colunas(df):
+    df = df.copy()
+
+    novos_nomes = {}
+
+    for coluna in df.columns:
+
+        if coluna == "_chave_reconciliacao":
+            continue
+
+        elif coluna == "_origem":
+            novos_nomes[coluna] = "Planilha"
+
+        elif coluna == "_linha_origem":
+            novos_nomes[coluna] = "Linha"
+
+        elif coluna.startswith("_raw_"):
+            conceito = nome_bonito(coluna.replace("_raw_", ""))
+            novos_nomes[coluna] = f"{conceito} (original)"
+
+        elif coluna.startswith("_status_"):
+            conceito = nome_bonito(coluna.replace("_status_", ""))
+            novos_nomes[coluna] = f"{conceito} (status)"
+
+        elif coluna.startswith("_mensagem_"):
+            conceito = nome_bonito(coluna.replace("_mensagem_", ""))
+            novos_nomes[coluna] = f"{conceito} (observação)"
+
+        elif not coluna.startswith("_"):
+            novos_nomes[coluna] = nome_bonito(coluna)
+
+    df = df.drop(
+        columns=["_chave_reconciliacao"],
+        errors="ignore"
+    )
+
+    return df.rename(columns=novos_nomes)
 
 # ============================================================
 # DASHBOARD
@@ -273,6 +324,41 @@ def escrever_dashboard(ws, resultado):
 
     ajustar_colunas(ws)
 
+def renomear_colunas(df):
+    df = df.copy()
+
+    novos_nomes = {}
+
+    for coluna in df.columns:
+
+        if coluna == "_chave_reconciliacao":
+            continue
+
+        elif coluna == "_origem":
+            novos_nomes[coluna] = "Planilha"
+
+        elif coluna == "_linha_origem":
+            novos_nomes[coluna] = "Linha"
+
+        elif coluna.startswith("_raw_"):
+            conceito = coluna.replace("_raw_", "").replace("_", " ").title()
+            novos_nomes[coluna] = f"{conceito} (original)"
+
+        elif coluna.startswith("_status_"):
+            conceito = coluna.replace("_status_", "").replace("_", " ").title()
+            novos_nomes[coluna] = f"{conceito} (status)"
+
+        elif coluna.startswith("_mensagem_"):
+            conceito = coluna.replace("_mensagem_", "").replace("_", " ").title()
+            novos_nomes[coluna] = f"{conceito} (observação)"
+
+    df = df.drop(
+        columns=["_chave_reconciliacao"],
+        errors="ignore"
+    )
+
+    return df.rename(columns=novos_nomes)
+
 # ============================================================
 # ESCRITA DAS ABAS
 # ============================================================
@@ -283,6 +369,8 @@ def escrever_dataframe(
     dataframe,
     destacar_colunas=None
 ):
+
+    dataframe = renomear_colunas(dataframe)
 
     dataframe.to_excel(
         writer,
