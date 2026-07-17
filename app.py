@@ -73,6 +73,4 @@ if botao_comparar():
 mostrar_dashboard_v2(resultado, list(especificacao.chaves))
 mostrar_resultados_v2(resultado)
 
-st.stop()
-
 botao_download(gerar_excel(resultado))
