@@ -640,14 +640,14 @@ def mostrar_resultados_v2(resultado):
                 errors="ignore",
             )
 
-            try:
-                st.dataframe(
-                    dataframe,
-                    use_container_width=True,
-                )
-            except Exception as e:
-                st.error(e)
-                st.write(dataframe.dtypes)
+            st.write(f"Renderizando: {titulo}")
+
+            st.write(dataframe.dtypes)
+
+            st.dataframe(
+                dataframe,
+                use_container_width=True,
+            )
 
 def botao_comparar():
 
