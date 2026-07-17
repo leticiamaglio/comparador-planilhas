@@ -6,9 +6,9 @@ Responsável pela comparação entre duas planilhas.
 
 import pandas as pd
 
-from reconciliador.normalizacao import preparar_valor
+from legacy.normalizacao import preparar_valor
 
-from reconciliador.modelos import (
+from v1.modelos import (
     ResultadoComparacao,
     ResumoComparacao
 )

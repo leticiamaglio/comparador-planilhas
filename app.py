@@ -1,5 +1,4 @@
 import streamlit as st
-
 from reconciliador.exportador import gerar_excel
 from reconciliador.interface import (
     aplicar_estilo,

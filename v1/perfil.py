@@ -1,8 +1,8 @@
-from reconciliador.perfis.generico import (
+from legacy.perfis.generico import (
     transformar as transformar_generico
 )
 
-from reconciliador.perfis.notas_fiscais import (
+from legacy.perfis.notas_fiscais import (
     transformar as transformar_notas
 )
 

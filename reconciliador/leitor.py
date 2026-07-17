@@ -107,7 +107,10 @@ def limpar_dataframe(df):
                 .astype(str)
                 .str.strip()
             )
-
+    # Remove linhas onde todas as células ficaram vazias após o strip
+    df = df.loc[
+        ~(df.astype(str) == "").all(axis=1)
+    ]
     df.reset_index(
         drop=True,
         inplace=True

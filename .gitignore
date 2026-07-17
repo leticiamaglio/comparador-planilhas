@@ -16,3 +16,16 @@ env/
 
 # Excel temporário
 ~$*.xlsx
+# Python
+__pycache__/
+*.py[cod]
+
+# VS Code
+.vscode/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários
+*.log

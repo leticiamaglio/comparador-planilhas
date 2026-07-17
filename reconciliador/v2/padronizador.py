@@ -82,6 +82,27 @@ class Padronizador:
             falhas = sum(estado != "direto" and estado != "extraido" for estado in status)
             if falhas:
                 avisos.append(f"{conceito.nome}: {falhas} linha(s) sem extração confiável.")
+        # Remove linhas em que todos os conceitos estejam vazios
+        colunas_conceitos = [
+            campo.conceito_id
+            for campo in configuracao.campos
+            if campo.conceito_id in saida.columns
+        ]
+
+        mascara_vazia = (
+            saida[colunas_conceitos]
+            .fillna("")
+            .astype(str)
+            .apply(lambda coluna: coluna.str.strip())
+            .eq("")
+            .all(axis=1)
+        )
+
+        linhas_descartadas = int(mascara_vazia.sum())
+
+        if linhas_descartadas:
+            saida = saida.loc[~mascara_vazia].reset_index(drop=True)
+            avisos.append(f"Linhas vazias ignoradas: {linhas_descartadas}.")
         return ResultadoPadronizacao(
 
     dados=saida.reset_index(drop=True),

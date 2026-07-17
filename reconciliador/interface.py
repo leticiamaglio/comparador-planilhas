@@ -471,42 +471,124 @@ def mostrar_resultados(resultado):
             use_container_width=True
         )
 
-
 def mostrar_dashboard_v2(resultado, chaves):
     """Resumo da reconciliação canônica, incluindo itens que exigem revisão."""
+
     resumo = resultado.resumo
-    st.subheader("Resumo da reconciliação")
-    st.caption(f"**Planilha A:** {resumo.nome_planilha_a} | **Planilha B:** {resumo.nome_planilha_b}")
-    st.caption(f"**Conceitos-chave:** {' + '.join(chaves)}")
+
+    st.subheader("Resultado da reconciliação")
+
+    st.caption(
+        f"**Planilha A:** {resumo.nome_planilha_a} | "
+        f"**Planilha B:** {resumo.nome_planilha_b}"
+    )
+
+    st.caption(
+        f"**Conceitos-chave:** {' + '.join(chaves)}"
+    )
+
     colunas = st.columns(4)
     colunas[0].metric("Consistentes", resumo.consistentes)
     colunas[1].metric("Inconsistentes", resumo.inconsistentes)
     colunas[2].metric("Exclusivos A", resumo.exclusivos_a)
     colunas[3].metric("Exclusivos B", resumo.exclusivos_b)
+
     colunas = st.columns(3)
     colunas[0].metric("Duplicidades A", resumo.duplicados_a)
     colunas[1].metric("Duplicidades B", resumo.duplicados_b)
     colunas[2].metric("Sem chave", resumo.sem_chave_a + resumo.sem_chave_b)
-    if resumo.duplicados_a or resumo.duplicados_b or resumo.sem_chave_a or resumo.sem_chave_b:
-        st.warning("Há registros que não foram reconciliados automaticamente. Consulte as abas de revisão.")
-    else:
-        st.success("Reconciliação concluída sem chaves duplicadas ou ausentes.")
 
+    pendencias = []
+
+    if resumo.inconsistentes:
+        pendencias.append(f"- **{resumo.inconsistentes}** inconsistência(s)")
+
+    if resumo.exclusivos_a:
+        pendencias.append(
+            f"- **{resumo.exclusivos_a}** registro(s) exclusivo(s) na Planilha A"
+        )
+
+    if resumo.exclusivos_b:
+        pendencias.append(
+            f"- **{resumo.exclusivos_b}** registro(s) exclusivo(s) na Planilha B"
+        )
+
+    if resumo.duplicados_a:
+        pendencias.append(
+            f"- **{resumo.duplicados_a}** duplicidade(s) na Planilha A"
+        )
+
+    if resumo.duplicados_b:
+        pendencias.append(
+            f"- **{resumo.duplicados_b}** duplicidade(s) na Planilha B"
+        )
+
+    if resumo.sem_chave_a or resumo.sem_chave_b:
+        pendencias.append(
+            f"- **{resumo.sem_chave_a + resumo.sem_chave_b}** registro(s) sem chave"
+        )
+
+    # Caso 1: nenhuma conciliação
+    if resumo.consistentes == 0:
+
+        st.warning(
+            """
+### ⚠️ Nenhum registro foi conciliado automaticamente
+
+Verifique se:
+
+- os conceitos-chave selecionados identificam corretamente os registros;
+- as duas planilhas possuem dados correspondentes;
+- os conceitos foram mapeados corretamente.
+"""
+        )
+
+    # Caso 2: existem pendências
+    elif pendencias:
+
+        mensagem = (
+            "### ⚠️ Atenção\n\n"
+            "A conciliação foi concluída, mas alguns registros exigem análise manual.\n\n"
+            + "\n".join(pendencias)
+        )
+
+        st.warning(mensagem)
+
+    # Caso 3: tudo conciliado
+    else:
+
+        st.success(
+            "✅ Todos os registros foram reconciliados automaticamente."
+        )
 
 def mostrar_resultados_v2(resultado):
     abas = st.tabs([
-        "Consistentes", "Inconsistentes", "Exclusivos A", "Exclusivos B",
-        "Duplicados A", "Duplicados B", "Sem chave A", "Sem chave B", "Consolidado",
+        "Consistentes",
+        "Inconsistentes",
+        "Exclusivos A",
+        "Exclusivos B",
+        "Duplicados A",
+        "Duplicados B",
+        "Sem chave A",
+        "Sem chave B",
+        "Consolidado",
     ])
+
     dados = [
-        resultado.consistentes, resultado.inconsistentes, resultado.exclusivos_a, resultado.exclusivos_b,
-        resultado.duplicados_a, resultado.duplicados_b, resultado.sem_chave_a, resultado.sem_chave_b,
+        resultado.consistentes,
+        resultado.inconsistentes,
+        resultado.exclusivos_a,
+        resultado.exclusivos_b,
+        resultado.duplicados_a,
+        resultado.duplicados_b,
+        resultado.sem_chave_a,
+        resultado.sem_chave_b,
         resultado.consolidado,
     ]
+
     for aba, dataframe in zip(abas, dados):
         with aba:
             st.dataframe(dataframe, use_container_width=True)
-
 
 def botao_comparar():
 
