@@ -58,11 +58,13 @@ if botao_comparar():
         for aviso in resultado_a.avisos + resultado_b.avisos:
             st.warning(aviso)
 
-        resultado = Reconciliador().executar(
+        st.session_state["resultado"] = Reconciliador().executar(
             resultado_a.dados,
             resultado_b.dados,
             especificacao
         )
+
+        st.session_state["chaves"] = list(especificacao.chaves)
 
     except ValueError as erro:
         st.error(str(erro))
@@ -70,7 +72,14 @@ if botao_comparar():
 
     st.divider()
 
-mostrar_dashboard_v2(resultado, list(especificacao.chaves))
-mostrar_resultados_v2(resultado)
+if "resultado" in st.session_state:
 
-botao_download(gerar_excel(resultado))
+    resultado = st.session_state["resultado"]
+    chaves = st.session_state["chaves"]
+
+    st.divider()
+
+    mostrar_dashboard_v2(resultado, chaves)
+    mostrar_resultados_v2(resultado)
+
+    botao_download(gerar_excel(resultado))

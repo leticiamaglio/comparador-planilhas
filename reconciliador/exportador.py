@@ -324,41 +324,6 @@ def escrever_dashboard(ws, resultado):
 
     ajustar_colunas(ws)
 
-def renomear_colunas(df):
-    df = df.copy()
-
-    novos_nomes = {}
-
-    for coluna in df.columns:
-
-        if coluna == "_chave_reconciliacao":
-            continue
-
-        elif coluna == "_origem":
-            novos_nomes[coluna] = "Planilha"
-
-        elif coluna == "_linha_origem":
-            novos_nomes[coluna] = "Linha"
-
-        elif coluna.startswith("_raw_"):
-            conceito = coluna.replace("_raw_", "").replace("_", " ").title()
-            novos_nomes[coluna] = f"{conceito} (original)"
-
-        elif coluna.startswith("_status_"):
-            conceito = coluna.replace("_status_", "").replace("_", " ").title()
-            novos_nomes[coluna] = f"{conceito} (status)"
-
-        elif coluna.startswith("_mensagem_"):
-            conceito = coluna.replace("_mensagem_", "").replace("_", " ").title()
-            novos_nomes[coluna] = f"{conceito} (observação)"
-
-    df = df.drop(
-        columns=["_chave_reconciliacao"],
-        errors="ignore"
-    )
-
-    return df.rename(columns=novos_nomes)
-
 # ============================================================
 # ESCRITA DAS ABAS
 # ============================================================
@@ -371,6 +336,18 @@ def escrever_dataframe(
 ):
 
     dataframe = renomear_colunas(dataframe)
+    
+    from decimal import Decimal
+
+    for coluna in dataframe.columns:
+
+        if dataframe[coluna].dtype == object:
+
+            dataframe[coluna] = dataframe[coluna].apply(
+                lambda x: float(x)
+                if isinstance(x, Decimal)
+                else x
+            )
 
     dataframe.to_excel(
         writer,

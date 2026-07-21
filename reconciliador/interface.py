@@ -635,19 +635,21 @@ def mostrar_resultados_v2(resultado):
 
             st.write(f"### {titulo}")
 
-            dataframe = dataframe.drop(
-                columns=["_chave_reconciliacao"],
-                errors="ignore",
-            )
+            if "Duplicados" in titulo:
 
-            st.write(f"Renderizando: {titulo}")
+                mostrar_duplicados(dataframe)
 
-            st.write(dataframe.dtypes)
+            else:
 
-            st.dataframe(
-                dataframe,
-                use_container_width=True,
-            )
+                dataframe = dataframe.drop(
+                    columns=["_chave_reconciliacao"],
+                    errors="ignore",
+                )
+
+                st.dataframe(
+                    dataframe,
+                    use_container_width=True,
+                )
 
 def botao_comparar():
 
@@ -666,3 +668,53 @@ def botao_download(arquivo_excel):
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )
+
+def formatar_chave(chave, colunas):
+
+    if not isinstance(chave, tuple):
+        chave = (chave,)
+
+    partes = []
+
+    for nome, valor in zip(colunas, chave):
+        partes.append(f"{nome}: {valor}")
+
+    return " | ".join(partes)
+
+def mostrar_duplicados(df):
+
+    if df.empty:
+        st.success("Nenhuma duplicidade encontrada.")
+        return
+
+    grupos = df.groupby("_chave_reconciliacao")
+
+    st.info(
+        f"Foram encontrados {grupos.ngroups} grupos de possíveis duplicidades."
+    )
+
+    for chave, grupo in grupos:
+
+        with st.expander(
+            f"Chave {chave} ({len(grupo)} registros)"
+        ):
+
+            grupo = grupo.drop(
+                columns=["_chave_reconciliacao"],
+                errors="ignore",
+            )
+
+            st.dataframe(
+                grupo,
+                use_container_width=True,
+            )
+
+            st.radio(
+                "Conclusão",
+                [
+                    "Ainda não analisado",
+                    "São duplicados",
+                    "Não são duplicados",
+                ],
+                key=f"duplicado_{str(chave)}",
+            )

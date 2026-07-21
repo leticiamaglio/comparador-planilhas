@@ -45,7 +45,7 @@ def normalizar(valor: Any, tipo: TipoDado) -> Any | None:
         try:
             return _decimal(valor)
         except (InvalidOperation, ValueError):
-            return _texto(valor)
+            return None
     if tipo is TipoDado.DATA:
         data = pd.to_datetime(valor, dayfirst=True, errors="coerce")
         return data.strftime("%Y-%m-%d") if not pd.isna(data) else _texto(valor)
